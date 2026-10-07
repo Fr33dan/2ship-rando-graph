@@ -1,0 +1,20 @@
+{
+    "Logic.h canPlaySong": "fe4ef2115cfe",
+    "Logic.h CanAccessDungeon": "2dbbbc76c305",
+    "Logic.h MoonMaskCount": "60c23c5eb285",
+    "Logic.h RemainsCount": "8487cb4438d6",
+    "Logic.h MeetsMoonRequirements": "9d64a908fbfd",
+    "Logic.h OwnsHalfDayForMode": "f0732b8325f9",
+    "Logic.h ClockFilter": "95b2aaee3d35",
+    "Logic.h RawAt": "f06a1c2e5cae",
+    "Logic.h RawBefore": "1e103ed751ea",
+    "Logic.h RawAfter": "5970d78da332",
+    "Logic.h RawBetween": "82f08aa9287c",
+    "South.cpp CanGetPastBigOctoWithoutBoat": "8620e774fdbf",
+    "South.cpp CanGetPastBigOcto": "a417acda7ad2",
+    "GiveItem.cpp": "0d06f7dd0483",
+    "ConvertItem.cpp": "79d380df277d",
+    "Logic/TimeLogic.cpp": "38b91d7add37",
+    "Logic/GlitchlessLogic.cpp": "22c7453f2e18",
+    "Logic/Logic.cpp FindReachableRegions": "0f4297f0b055"
+}

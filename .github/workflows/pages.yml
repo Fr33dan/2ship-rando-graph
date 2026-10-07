@@ -1,0 +1,86 @@
+name: Build logic and deploy
+
+# Reads the rando logic out of the game's source for recent commits and publishes the viewer with it.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 5 * * *" # daily, to pick up new game commits
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  GAME_REPO: 2ship2harkinian/2ship2harkinian
+  GAME_REF: develop
+  HISTORY: 400 # how many commits back to record
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      newest: ${{ steps.extract.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the game source with its history
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GAME_REPO }}
+          ref: ${{ env.GAME_REF }}
+          path: game
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # --strict fails this step when the newest commit is unreadable or hand-mirrored code changed. The site is
+      # still built from everything that was readable; the "health" job reports the problem.
+      - name: Record logic
+        id: extract
+        continue-on-error: true
+        run: node extract.mjs --source game --history "$HISTORY" --strict
+
+      - name: Test
+        run: node test.mjs
+
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp index.html style.css app.js expr.js primitives.js solver.js store.js tree.js _site/
+          cp -r logic _site/logic
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Turns the run red (and notifies) when the newest game commit needs someone to look at primitives.js/solver.js,
+  # without holding back the deploy above.
+  health:
+    needs: build
+    if: needs.build.outputs.newest != 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "::error::The newest game commit could not be recorded cleanly. See the 'Record logic' step of the build job."
+          exit 1

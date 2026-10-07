@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>2Ship Rando Requirement Tree</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <aside id="sidebar">
+            <h1>Rando Requirement Tree</h1>
+
+            <section id="load">
+                <label class="drop" id="drop">
+                    <input type="file" id="file" accept=".json,application/json" />
+                    <strong>Drop a spoiler file here</strong>
+                    <span>or click to choose one</span>
+                </label>
+                <button type="button" id="example" class="link">Try it with a vanilla-placement example</button>
+                <p id="error" class="error" hidden></p>
+            </section>
+
+            <section id="seed" hidden>
+                <h2>Seed</h2>
+                <dl id="seed-info"></dl>
+                <label class="version">Logic version<select id="version"></select></label>
+                <ul id="warnings" class="warnings"></ul>
+                <details id="options">
+                    <summary>Settings that differ from default</summary>
+                    <dl id="option-list"></dl>
+                </details>
+            </section>
+
+            <section id="pick" hidden>
+                <h2>Show requirements for</h2>
+                <div class="search">
+                    <input type="search" id="search" placeholder="Item, check, region or event…" autocomplete="off" spellcheck="false" />
+                    <ul id="results" hidden></ul>
+                </div>
+                <label class="toggle"><input type="checkbox" id="hide-start" checked /> Hide requirements met by starting items</label>
+            </section>
+
+            <section id="detail" hidden>
+                <h2>Selected</h2>
+                <p id="detail-title"></p>
+                <dl id="detail-lines"></dl>
+                <div class="actions">
+                    <button type="button" id="reroot" hidden>Show its tree</button>
+                    <button type="button" id="jump" hidden>Go to where it is expanded</button>
+                </div>
+            </section>
+
+            <section id="legend" hidden>
+                <h2>Legend</h2>
+                <ul class="legend">
+                    <li><i class="k-item"></i>Item, with where it is</li>
+                    <li><i class="k-region"></i>Reaching a region / a gate on the way</li>
+                    <li><i class="k-event"></i>Event (something you do in the world)</li>
+                    <li><i class="k-any"></i>Any one of (the seed's way is highlighted)</li>
+                    <li><i class="k-all"></i>All of these</li>
+                    <li><i class="k-alts"></i>Other ways, click to open</li>
+                    <li><i class="k-missing"></i>Not available in this seed</li>
+                </ul>
+                <p class="hint">Click a box to select it, click its round handle to open or close it. Drag to pan, scroll to zoom. “S3” is the sphere: how many rounds of collecting everything reachable it takes.</p>
+            </section>
+        </aside>
+
+        <main id="stage">
+            <div id="toolbar" hidden>
+                <button type="button" id="back" disabled>← Back</button>
+                <span id="crumb"></span>
+                <span class="spacer"></span>
+                <button type="button" id="expand">Open the seed's route</button>
+                <button type="button" id="collapse">Collapse</button>
+                <button type="button" id="fit">Fit</button>
+            </div>
+            <svg id="canvas" role="img" aria-label="Requirement tree">
+                <g id="viewport">
+                    <g id="links"></g>
+                    <g id="nodes"></g>
+                </g>
+            </svg>
+            <p id="empty">Load a spoiler file to see what each item needs.</p>
+        </main>
+
+        <script src="logic/index.js"></script>
+        <script src="store.js"></script>
+        <script src="expr.js"></script>
+        <script src="primitives.js"></script>
+        <script src="solver.js"></script>
+        <script src="tree.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html>

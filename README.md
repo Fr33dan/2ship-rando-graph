@@ -1,5 +1,7 @@
 # 2Ship rando requirement tree
 
+**Use it here: <https://fr33dan.github.io/2ship-rando-graph/>**
+
 Drop a [2 Ship 2 Harkinian](https://github.com/2ship2harkinian/2ship2harkinian) randomizer spoiler file on the page
 and see what any item, check, region or event needs, as a tree. The file is read in your browser and never uploaded.
 

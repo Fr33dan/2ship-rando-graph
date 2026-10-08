@@ -54,7 +54,11 @@
             <section id="legend" hidden>
                 <h2>Legend</h2>
                 <ul class="legend">
-                    <li><i class="k-item"></i>Item, with where it is</li>
+                    <li><i class="k-item"></i>Item, with where it is. Coloured by kind:</li>
+                    <li class="kinds">
+                        <span><i class="c-gear"></i>gear</span><span><i class="c-mask"></i>mask</span><span><i class="c-song"></i>song</span>
+                        <span><i class="c-key"></i>key</span><span><i class="c-collect"></i>fairy / token</span><span><i class="c-soul"></i>soul</span>
+                    </li>
                     <li><i class="k-region"></i>Reaching a region / a gate on the way</li>
                     <li><i class="k-event"></i>Event (something you do in the world)</li>
                     <li><i class="k-any"></i>Any one of (the seed's way is highlighted)</li>
@@ -71,6 +75,12 @@
                 <button type="button" id="back" disabled>← Back</button>
                 <span id="crumb"></span>
                 <span class="spacer"></span>
+                <span class="find">
+                    <input type="search" id="find" placeholder="Find in this tree…" autocomplete="off" spellcheck="false" aria-label="Find in this tree" />
+                    <span id="find-count"></span>
+                    <button type="button" id="find-prev" title="Previous match (Shift+Enter)" disabled>‹</button>
+                    <button type="button" id="find-next" title="Next match (Enter)" disabled>›</button>
+                </span>
                 <button type="button" id="expand">Open the seed's route</button>
                 <button type="button" id="collapse">Collapse</button>
                 <button type="button" id="fit">Fit</button>

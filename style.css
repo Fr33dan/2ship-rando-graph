@@ -19,6 +19,12 @@
     --k-alts: #9aa0a8;
     --k-missing: #a8332b;
     --k-goal: #b3541e;
+    --c-mask: #b8324f;
+    --c-song: #0b7f97;
+    --c-key: #5f7a16;
+    --c-collect: #b0389c;
+    --c-soul: #4b4fc4;
+    --found: #f2c230;
     color-scheme: light dark;
 }
 
@@ -44,6 +50,12 @@
         --k-alts: #6f7884;
         --k-missing: #f08379;
         --k-goal: #f09a62;
+        --c-mask: #f07f96;
+        --c-song: #5ac8de;
+        --c-key: #a9c957;
+        --c-collect: #e58ad6;
+        --c-soul: #9a9cf2;
+        --found: #f2c230;
     }
 }
 
@@ -369,6 +381,34 @@ details dl {
 .k-missing { --c: var(--k-missing); }
 .k-goal { --c: var(--k-goal); }
 
+/* Item boxes take the colour of the kind of item; these come after the box kinds so they win. */
+.c-gear { --c: var(--k-item); }
+.c-mask { --c: var(--c-mask); }
+.c-song { --c: var(--c-song); }
+.c-key { --c: var(--c-key); }
+.c-collect { --c: var(--c-collect); }
+.c-soul { --c: var(--c-soul); }
+.c-junk { --c: var(--k-alts); }
+
+.legend .kinds {
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    margin: 0 0 6px 20px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.legend .kinds span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend .kinds i {
+    width: 9px;
+    height: 9px;
+}
+
 #stage {
     position: relative;
     min-width: 0;
@@ -376,6 +416,7 @@ details dl {
 }
 
 #toolbar {
+    flex-wrap: wrap;
     position: absolute;
     z-index: 2;
     top: 10px;
@@ -393,6 +434,44 @@ details dl {
 
 #toolbar .spacer {
     flex: 1;
+}
+
+.find {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px 2px 2px;
+    background: var(--panel);
+    border: 1px solid var(--node-line);
+    border-radius: 6px;
+}
+
+.find input {
+    width: 170px;
+    padding: 4px 6px;
+    font: inherit;
+    color: var(--ink);
+    background: none;
+    border: 0;
+}
+
+.find button {
+    padding: 1px 8px;
+    border: 0;
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+#find-count {
+    min-width: 44px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+}
+
+#find-count.none {
+    color: var(--danger);
 }
 
 #crumb {
@@ -532,6 +611,16 @@ details dl {
 .handle.jump text {
     fill: var(--accent);
     font-size: 12px;
+}
+
+.node.match .box {
+    stroke: var(--found);
+    stroke-width: 2.5;
+    stroke-dasharray: none;
+}
+
+.node.match.current .box {
+    stroke-width: 4.5;
 }
 
 .node.flash .box {

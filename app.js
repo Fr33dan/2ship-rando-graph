@@ -28,6 +28,7 @@
     let selected = null;
     let cameFrom = null; // the "shown elsewhere" box the last jump started from
     let flashed = null;
+    const find = { hits: [], set: new Set(), at: -1 };
     const history = [];
     const view = { x: 40, y: 40, k: 1 };
 
@@ -220,6 +221,7 @@
         $("crumb").textContent = target.label;
         $("detail").hidden = true;
         openInitial();
+        runFind(false);
         render();
         fit();
     }
@@ -309,6 +311,57 @@
         }
         node.open = true;
     }
+
+    // ---- Find in tree ----
+
+    // Matches every box that has been built, including ones inside closed branches. Alternatives that were never
+    // opened do not exist yet, so they are not searched.
+    function runFind(keepPlace) {
+        const words = $("find").value.toLowerCase().split(/\s+/).filter(Boolean);
+        const previous = keepPlace ? find.hits[find.at] : null;
+        find.hits = [];
+        if (root && words.length) {
+            eachBuilt(root, (node, parent) => {
+                node.parent = parent;
+                const text = `${node.label} ${node.why || ""} ${node.sub || ""}`.toLowerCase();
+                if (words.every((word) => text.includes(word))) {
+                    find.hits.push(node);
+                }
+            });
+        }
+        find.set = new Set(find.hits);
+        find.at = previous ? find.hits.indexOf(previous) : -1;
+        const count = $("find-count");
+        count.textContent = !words.length ? "" : find.hits.length ? `${find.at + 1 || "–"} / ${find.hits.length}` : "none";
+        count.className = words.length && !find.hits.length ? "none" : "";
+        $("find-prev").disabled = $("find-next").disabled = find.hits.length === 0;
+    }
+
+    function stepFind(direction) {
+        if (find.hits.length === 0) {
+            return;
+        }
+        find.at = find.at < 0 ? (direction > 0 ? 0 : find.hits.length - 1) : (find.at + direction + find.hits.length) % find.hits.length;
+        $("find-count").textContent = `${find.at + 1} / ${find.hits.length}`;
+        reveal(find.hits[find.at]);
+    }
+
+    $("find").addEventListener("input", () => {
+        runFind(false);
+        render();
+    });
+    $("find").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            stepFind(event.shiftKey ? -1 : 1);
+        } else if (event.key === "Escape") {
+            $("find").value = "";
+            runFind(false);
+            render();
+        }
+    });
+    $("find-next").addEventListener("click", () => stepFind(1));
+    $("find-prev").addEventListener("click", () => stepFind(-1));
 
     // Open the seed's route breadth-first until the picture gets big; the rest stays one click away.
     function openInitial() {
@@ -407,6 +460,9 @@
 
     function drawNode(node) {
         const classes = ["node", `k-${node.kind}`];
+        if (node.cat) classes.push(`c-${node.cat}`);
+        if (find.set.has(node)) classes.push("match");
+        if (find.hits[find.at] === node) classes.push("current");
         if (node.route) classes.push("route");
         if (node.ok === false) classes.push("no");
         if (node.ref) classes.push("ref");
@@ -506,7 +562,12 @@
         if (node.open) {
             node.open = false;
         } else {
+            const built = !node.lazy;
             open(node);
+            if (!built) {
+                // Newly built boxes may match the search.
+                runFind(true);
+            }
         }
         // Keep the toggled node under the cursor while everything around it reflows.
         const before = { x: node.x, y: node.y };
@@ -670,7 +731,7 @@
     if (!index || !index.latest) {
         showError("No logic is recorded yet. Run: node extract.mjs");
     } else if (new URLSearchParams(location.search).has("example")) {
-        // index.html?example, optionally with &target=item:RI_HOOKSHOT and &version=<logic id>
+        // index.html?example, optionally with &target=item:RI_HOOKSHOT, &version=<logic id> and &find=<text>
         const params = new URLSearchParams(location.search);
         loadExample()
             .then(() => (index.versions[params.get("version")] ? loadSpoiler(loaded.spoiler, loaded.name, params.get("version")) : null))
@@ -678,6 +739,11 @@
                 const wanted = targets.find((target) => target.id === params.get("target"));
                 if (wanted) {
                     show(wanted, true);
+                }
+                if (params.get("find")) {
+                    $("find").value = params.get("find");
+                    runFind(false);
+                    stepFind(1);
                 }
             });
     }

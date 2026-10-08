@@ -13,9 +13,14 @@ of the game's source and records under `logic/`, one record per version of the l
 - `S3` on a box is its sphere: the number of rounds of "collect everything reachable" it takes to get there.
 - Requirements already met by starting items are hidden unless you untick the box in the sidebar.
 - Select a box to see the raw condition and route in the sidebar, and to re-root the tree on it.
+- Item boxes are coloured by kind of item (gear, mask, song, key, fairy / token, soul).
+- A dashed box with ↗ is expanded elsewhere in the tree; click the ↗ to go there, and "Back to where you were" to
+  return.
+- "Find in this tree" highlights every matching box and steps through them with Enter / Shift+Enter, opening
+  closed branches as needed. Alternatives that were never opened are not searched.
 
-`?example` loads a vanilla-placement example; `&target=item:RI_HOOKSHOT` picks a target and `&version=<logic id>` a
-logic version.
+`?example` loads a vanilla-placement example; `&target=item:RI_HOOKSHOT` picks a target, `&version=<logic id>` a
+logic version and `&find=<text>` runs a search.
 
 ## Logic versions
 

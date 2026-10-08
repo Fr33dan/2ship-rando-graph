@@ -1,7 +1,8 @@
 // Turns a solved spoiler into a requirement tree for one target.
 //
-// Tree node: { key, kind, label, sub, why, sphere, ok, route, ref, shown, closed, target, detail, kids, lazy }
+// Tree node: { key, kind, cat, label, sub, why, sphere, ok, route, ref, shown, closed, target, detail, kids, lazy }
 //   kind  goal | item | start | check | region | gate | event | group | all | any | alts | alt | time | missing | not | note
+//   cat   for boxes that stand for an item, the kind of item (see itemCategory), used for colour
 //   ok    false when the thing is not obtainable/reachable in this seed
 //   ref   the same thing is expanded elsewhere in the tree (same key)
 //   closed  built, but starts collapsed
@@ -11,6 +12,30 @@
     const START = "RR_MAX";
     const GOAL_REGION = "RR_MOON_MAJORAS_LAIR";
     const MAX_DEPTH = 300;
+
+    // The kind of item, as players think of it. Songs and souls are "major" items to the game, so names decide.
+    function itemCategory(data, ri) {
+        const type = data.items[ri] ? data.items[ri].type : "";
+        if (/^RI_(SONG_|PROGRESSIVE_LULLABY)/.test(ri)) {
+            return "song";
+        }
+        if (type === "RITYPE_MASK") {
+            return "mask";
+        }
+        if (type === "RITYPE_SMALL_KEY" || type === "RITYPE_BOSS_KEY") {
+            return "key";
+        }
+        if (type === "RITYPE_STRAY_FAIRY" || type === "RITYPE_SKULLTULA_TOKEN" || /^RI_TRIFORCE_PIECE/.test(ri)) {
+            return "collect";
+        }
+        if (/^RI_SOUL_/.test(ri)) {
+            return "soul";
+        }
+        if (type === "RITYPE_JUNK") {
+            return "junk";
+        }
+        return "gear";
+    }
 
     const checkLabel = (id) => RG.humanize(id.replace(/^RC_/, ""));
     const regionLabel = (id) => (id === START ? "Start" : RG.humanize(id.replace(/^RR_/, "")));
@@ -55,6 +80,7 @@
         const { data, logic, state, placements, regionInfo, timeStates, checkRegions, checkInfo, eventInfo, incoming } = result;
         const hideStart = !buildOptions || buildOptions.hideStart !== false;
         const seen = new Set();
+        const category = (ri) => itemCategory(data, ri);
 
         const finalTime = (regionId) => (timeStates.has(regionId) ? timeStates.get(regionId).mask : 0n);
 
@@ -244,12 +270,13 @@
 
         function itemNode(src, depth, collapsed) {
             if (src.start) {
-                return { kind: "start", label: logic.itemName(src.ri), sub: "starting item", sphere: 0 };
+                return { kind: "start", cat: category(src.ri), label: logic.itemName(src.ri), sub: "starting item", sphere: 0 };
             }
             const key = `item:${src.check}`;
             const base = {
                 key,
                 kind: "item",
+                cat: category(src.ri),
                 label: logic.itemName(src.ri),
                 sub: `at ${checkLabel(src.check)}`,
                 sphere: src.sphere,
@@ -283,6 +310,7 @@
                                   const info = checkInfo.get(check);
                                   return {
                                       kind: "item",
+                                      cat: category(placements.get(check)),
                                       ok: Boolean(info),
                                       label: logic.itemName(placements.get(check)),
                                       sub: `at ${checkLabel(check)}${info ? "" : " (out of logic)"}`,
@@ -598,6 +626,7 @@
                     return {
                         key: `item:${check}`,
                         kind: "check",
+                        cat: category(id),
                         ok: Boolean(info),
                         label: checkLabel(check),
                         sub: info ? "location" : "location (out of logic)",
@@ -612,6 +641,7 @@
                 }
                 return {
                     kind: "item",
+                    cat: category(id),
                     label: logic.itemName(id),
                     sub: holders.length === 1 ? "1 location" : `${holders.length} locations`,
                     ok: holders.some((check) => checkInfo.has(check)),
@@ -625,6 +655,7 @@
                 return {
                     key: `item:${id}`,
                     kind: "check",
+                    cat: category(placements.get(id)),
                     label: checkLabel(id),
                     sub: `holds ${logic.itemName(placements.get(id))}${info ? "" : " (out of logic)"}`,
                     ok: Boolean(info),
@@ -642,6 +673,7 @@
         }
     }
 
+    RG.itemCategory = itemCategory;
     RG.listTargets = listTargets;
     RG.buildTree = buildTree;
 })(globalThis);

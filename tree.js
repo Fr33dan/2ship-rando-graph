@@ -257,7 +257,7 @@
                 detail: checkDetail(src.check),
             };
             if (seen.has(key)) {
-                return { ...base, ref: true };
+                return { ...base, sub: `${base.sub} · shown elsewhere`, ref: true };
             }
             seen.add(key);
             if (collapsed) {
@@ -623,6 +623,7 @@
                 const info = checkInfo.get(id);
                 seen.add(`item:${id}`);
                 return {
+                    key: `item:${id}`,
                     kind: "check",
                     label: checkLabel(id),
                     sub: `holds ${logic.itemName(placements.get(id))}${info ? "" : " (out of logic)"}`,

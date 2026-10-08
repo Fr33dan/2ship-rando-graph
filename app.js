@@ -26,6 +26,8 @@
     let current = null;
     let root = null;
     let selected = null;
+    let cameFrom = null; // the "shown elsewhere" box the last jump started from
+    let flashed = null;
     const history = [];
     const view = { x: 40, y: 40, k: 1 };
 
@@ -213,6 +215,7 @@
         current = target;
         root = RG.buildTree(result, target, { hideStart: $("hide-start").checked });
         selected = null;
+        cameFrom = null;
         $("back").disabled = history.length === 0;
         $("crumb").textContent = target.label;
         $("detail").hidden = true;
@@ -408,6 +411,7 @@
         if (node.ok === false) classes.push("no");
         if (node.ref) classes.push("ref");
         if (node === selected) classes.push("selected");
+        if (node === flashed) classes.push("flash");
         const g = svgEl("g", { class: classes.join(" "), transform: `translate(${node.x},${node.y})`, tabindex: 0 });
 
         const sub = [node.why, node.sub].filter(Boolean).join(" — ");
@@ -439,17 +443,44 @@
             event.stopPropagation();
             select(node);
         });
+        const jumps = Boolean(node.ref && node.key);
         g.addEventListener("dblclick", (event) => {
             event.stopPropagation();
-            toggle(node);
+            if (jumps) {
+                jump(node);
+            } else {
+                toggle(node);
+            }
         });
         g.addEventListener("keydown", (event) => {
             if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
                 select(node);
-                toggle(node);
+                if (jumps) {
+                    jump(node);
+                } else {
+                    toggle(node);
+                }
             }
         });
+
+        // A box that is expanded somewhere else gets an arrow handle that goes there.
+        if (jumps) {
+            const handle = svgEl("g", { class: "handle jump", transform: `translate(${NODE_W},${NODE_H / 2})` });
+            const tip = svgEl("title");
+            tip.textContent = "Go to where this is expanded";
+            handle.append(tip, svgEl("circle", { r: 9 }));
+            const arrow = svgEl("text");
+            arrow.textContent = "↗";
+            handle.append(arrow);
+            handle.addEventListener("click", (event) => {
+                event.stopPropagation();
+                if (!dragged) {
+                    jump(node);
+                }
+            });
+            g.append(handle);
+        }
 
         if (hasKids(node)) {
             const handle = svgEl("g", { class: "handle", transform: `translate(${NODE_W},${NODE_H / 2})` });
@@ -507,7 +538,15 @@
         $("reroot").onclick = target ? () => show(target, true) : null;
         const original = node.ref && node.key ? findOriginal(node.key) : null;
         $("jump").hidden = !original;
-        $("jump").onclick = original ? () => reveal(original) : null;
+        $("jump").onclick = original ? () => jump(node) : null;
+        const back = cameFrom && node !== cameFrom ? cameFrom : null;
+        $("jump-back").hidden = !back;
+        $("jump-back").onclick = back
+            ? () => {
+                  cameFrom = null;
+                  reveal(back);
+              }
+            : null;
         render();
     }
 
@@ -522,6 +561,15 @@
         return found;
     }
 
+    // From a "shown elsewhere" box to the place the same thing is expanded, remembering the way back.
+    function jump(node) {
+        const original = findOriginal(node.key);
+        if (original) {
+            cameFrom = node;
+            reveal(original);
+        }
+    }
+
     function reveal(node) {
         for (let up = node.parent; up; up = up.parent) {
             up.open = true;
@@ -532,7 +580,14 @@
         view.x = stage.width / 2 - (node.x + NODE_W / 2) * view.k;
         view.y = stage.height / 2 - (node.y + NODE_H / 2) * view.k;
         applyView();
+        flashed = node;
         select(node);
+        setTimeout(() => {
+            if (flashed === node) {
+                flashed = null;
+                render();
+            }
+        }, 1400);
     }
 
     // ---- Pan and zoom ----

@@ -525,6 +525,21 @@ details dl {
     fill: var(--accent-soft);
 }
 
+.handle.jump circle {
+    stroke: var(--accent);
+}
+
+.handle.jump text {
+    fill: var(--accent);
+    font-size: 12px;
+}
+
+.node.flash .box {
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-dasharray: none;
+}
+
 .handle text {
     fill: var(--ink);
     font-size: 13px;

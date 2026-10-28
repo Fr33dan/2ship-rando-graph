@@ -286,7 +286,6 @@ function extractLogic(source) {
     const hash = (text) => createHash("sha1").update(text.replace(/\s+/g, " ")).digest("hex").slice(0, 12);
     const ported = {};
     for (const name of [
-        "canPlaySong",
         "CanAccessDungeon",
         "MoonMaskCount",
         "RemainsCount",
@@ -318,6 +317,13 @@ function extractLogic(source) {
     }
     ported["Logic/Logic.cpp FindReachableRegions"] = hash(functionBody(stripComments(read("Logic", "Logic.cpp")), "FindReachableRegions"));
 
+    // The song table is read per version too; only a canPlaySong() this parser cannot read falls back to the
+    // hand-written table, and is flagged for it.
+    const songs = parseSongTable(logicHClean);
+    if (!songs) {
+        ported["Logic.h canPlaySong"] = hash(functionBody(logicHClean, "canPlaySong"));
+    }
+
     const data = {
         regions,
         regionOrder,
@@ -332,8 +338,22 @@ function extractLogic(source) {
         checks,
         items,
         startingRules,
+        songs,
         ported,
     };
+
+    // primitives.js replaces some of the game's macros with its own handling. Changes to those macros would
+    // otherwise go unnoticed, so they are watched like the other hand-mirrored code. CAN_PLAY_SONG's Ocarina term
+    // is left out because the handler reads it from each version.
+    try {
+        const probe = globalThis.RG.createLogic(data, globalThis.RG.defaultOptions(data), {});
+        for (const name of probe.handlerNames.filter((handled) => macros[handled]).sort()) {
+            const body = name === "CAN_PLAY_SONG" ? macros[name].body.replace("HAS_ITEM(ITEM_OCARINA_OF_TIME) && ", "") : macros[name].body;
+            ported[`#define ${name}`] = hash(body);
+        }
+    } catch {
+        // Data too old for primitives.js; validation reports that version as unusable.
+    }
     return { data, regionGroups };
 }
 
@@ -453,6 +473,66 @@ function parseStartingRules(text, riList) {
         }
     }
     return rules;
+}
+
+// Reads canPlaySong() out of Logic.h: { requiresOcarina, buttons: { OCARINA_SONG_X: [button names] | { count } |
+// true | false }, fallback }, where fallback is the default case. Returns null when the function has anything this
+// does not recognise, so primitives.js uses its hand-written table and the page flags the difference.
+function parseSongTable(text) {
+    const body = functionBody(text, "canPlaySong");
+    const switchAt = body.indexOf("switch");
+    if (!body || switchAt < 0) {
+        return null;
+    }
+    const preamble = body.slice(1, switchAt).replace(/\s+/g, "");
+    let requiresOcarina = false;
+    if (/^if\(!HAS_ITEM\(ITEM_OCARINA_OF_TIME\)\)\{?returnfalse;\}?$/.test(preamble)) {
+        requiresOcarina = true;
+    } else if (preamble !== "") {
+        return null;
+    }
+    const open = body.indexOf("{", switchAt);
+    const close = matchBracket(body, open);
+    if (body.slice(close + 1, -1).trim() !== "") {
+        return null;
+    }
+
+    const buttons = {};
+    let fallback;
+    let pending = [];
+    const re = /case\s+(\w+)\s*:|default\s*:|return\s+([^;]+);/g;
+    for (const m of body.slice(open + 1, close).matchAll(re)) {
+        if (m[1]) {
+            pending.push(m[1]);
+            continue;
+        }
+        if (!m[2]) {
+            pending.push("default");
+            continue;
+        }
+        const expr = m[2].replace(/\s+/g, "");
+        let value;
+        let count;
+        const flags = expr.match(/Flags_GetRandoInf\(RANDO_INF_OBTAINED_OCARINA_BUTTON_\w+\)/g) || [];
+        if (/^\(*(true|false)\)*$/.test(expr)) {
+            value = expr.includes("true");
+        } else if ((count = expr.match(/^\(*FoundOcarinaButtons\(\)>=(\d+)\)*$/))) {
+            value = { count: Number(count[1]) };
+        } else if (flags.length && flags.reduce((rest, flag) => rest.replace(flag, ""), expr).replace(/[()&]/g, "") === "") {
+            value = flags.map((flag) => flag.match(/OCARINA_BUTTON_(\w+)\)/)[1]);
+        } else {
+            return null;
+        }
+        for (const label of pending) {
+            if (label === "default") {
+                fallback = value;
+            } else {
+                buttons[label] = value;
+            }
+        }
+        pending = [];
+    }
+    return Object.keys(buttons).length ? { requiresOcarina, buttons, fallback } : null;
 }
 
 const RANDO_PATH = "mm/2s2h/Rando";

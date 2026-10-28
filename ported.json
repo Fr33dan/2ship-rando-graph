@@ -1,5 +1,4 @@
 {
-    "Logic.h canPlaySong": "fe4ef2115cfe",
     "Logic.h CanAccessDungeon": "2dbbbc76c305",
     "Logic.h MoonMaskCount": "60c23c5eb285",
     "Logic.h RemainsCount": "8487cb4438d6",
@@ -16,5 +15,23 @@
     "ConvertItem.cpp": "79d380df277d",
     "Logic/TimeLogic.cpp": "38b91d7add37",
     "Logic/GlitchlessLogic.cpp": "22c7453f2e18",
-    "Logic/Logic.cpp FindReachableRegions": "0f4297f0b055"
+    "Logic/Logic.cpp FindReachableRegions": "0f4297f0b055",
+    "#define CAN_ACCESS": "9a69892a514b",
+    "#define CAN_AFFORD": "d81138b9f793",
+    "#define CAN_OWL_WARP": "58ef3e445db6",
+    "#define CAN_PLAY_SONG": "2d94f8afc8d5",
+    "#define CAN_USE_ABILITY": "580141c17278",
+    "#define CAN_USE_MAGIC_ARROW": "905092b26498",
+    "#define CHECK_MAX_HP": "eb8d35490463",
+    "#define HAS_BOTTLE": "10e5526be298",
+    "#define HAS_ENOUGH_SKULLTULA_TOKENS": "a0aa223586e0",
+    "#define HAS_ENOUGH_STRAY_FAIRIES": "4f5e1befda7f",
+    "#define HAS_ITEM": "94e608de9064",
+    "#define HAS_MAGIC": "de02c5f0586c",
+    "#define IS_DEITY": "f68bee44be9f",
+    "#define IS_DEKU": "29a1a88fd4ca",
+    "#define IS_GORON": "1372986b5bd7",
+    "#define IS_HUMAN": "c38a66bad863",
+    "#define IS_ZORA": "9d984072aaef",
+    "#define KEY_COUNT": "06d6d0dec654"
 }

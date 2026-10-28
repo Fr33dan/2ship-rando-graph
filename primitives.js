@@ -371,19 +371,36 @@
         const bit = (index) => 1n << BigInt(index);
         const below = (index) => bit(index) - 1n;
 
+        // canPlaySong() for one ocarina song. Each logic version carries its own table (data.songs, read from
+        // Logic.h); SONG_BUTTONS only serves versions whose canPlaySong() the extractor could not read.
         function songButtons(ocarinaSong) {
-            if (ocarinaSong === "OCARINA_SONG_SCARECROW_SPAWN") {
-                return buttonsShuffled ? threshold("buttons", 2) : TRUE;
+            let need;
+            if (data.songs) {
+                need = ocarinaSong in data.songs.buttons ? data.songs.buttons[ocarinaSong] : data.songs.fallback;
+            } else if (ocarinaSong === "OCARINA_SONG_SCARECROW_SPAWN") {
+                need = { count: 2 };
+            } else if (SONG_BUTTONS[ocarinaSong] !== undefined) {
+                need = [...SONG_BUTTONS[ocarinaSong]].map((b) => BUTTON_NAMES[b]);
             }
-            const buttons = SONG_BUTTONS[ocarinaSong];
-            if (buttons === undefined) {
+            if (need === undefined) {
                 throw new Error(`unknown song ${ocarinaSong}`);
             }
-            if (!buttonsShuffled) {
-                return TRUE;
+            let buttons;
+            if (typeof need === "boolean") {
+                buttons = need ? TRUE : FALSE;
+            } else if (!buttonsShuffled) {
+                buttons = TRUE;
+            } else if (need.count !== undefined) {
+                buttons = threshold("buttons", need.count);
+            } else {
+                buttons = makeAnd(need.map((name) => fact(`inf:RANDO_INF_OBTAINED_OCARINA_BUTTON_${name}`)));
             }
-            return makeAnd([...buttons].map((b) => fact(`inf:RANDO_INF_OBTAINED_OCARINA_BUTTON_${BUTTON_NAMES[b]}`)));
+            const ocarina = data.songs && data.songs.requiresOcarina ? fact("inv:ITEM_OCARINA_OF_TIME") : TRUE;
+            return makeAnd([ocarina, buttons]);
         }
+
+        // Builds before October 2026 checked for the Ocarina in CAN_PLAY_SONG; later ones do it in canPlaySong().
+        const songMacroNeedsOcarina = !data.macros.CAN_PLAY_SONG || data.macros.CAN_PLAY_SONG.body.includes("HAS_ITEM(ITEM_OCARINA_OF_TIME)");
 
         function ownsHalfDay(index) {
             if (!clockShuffle) {
@@ -497,7 +514,7 @@
                     `CAN_PLAY_SONG(${name})`,
                     `Play ${SONG_NAMES[name]}`,
                     makeAnd([
-                        fact("inv:ITEM_OCARINA_OF_TIME"),
+                        songMacroNeedsOcarina ? fact("inv:ITEM_OCARINA_OF_TIME") : TRUE,
                         fact(`quest:QUEST_SONG_${name}`),
                         songButtons(QUEST_SONG_TO_OCARINA[name]),
                     ])
@@ -505,7 +522,7 @@
             },
             canPlaySong: ([song], env) => {
                 const name = argName(song, env);
-                return group(`canPlaySong(${name})`, `Ocarina buttons for ${humanize(name.replace(/^OCARINA_SONG_/, ""))}`, songButtons(name));
+                return group(`canPlaySong(${name})`, `Play ${humanize(name.replace(/^OCARINA_SONG_/, ""))}`, songButtons(name));
             },
             CAN_USE_MAGIC_ARROW: ([type], env) => {
                 const name = argName(type, env);
@@ -1057,6 +1074,7 @@
 
         return {
             data,
+            handlerNames: Object.keys(handlers),
             options,
             prices,
             clockShuffle,

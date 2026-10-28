@@ -55,7 +55,13 @@
 
     // The distinct topics behind a list of drifted source names.
     function describeDrift(names) {
-        const topics = names.map((name) => (PORTED_TOPICS.find(([pattern]) => pattern.test(name)) || [null, name])[1]);
+        const topics = names.map((name) => {
+            const macro = name.match(/^#define (\w+)$/);
+            if (macro) {
+                return `the ${macro[1]} rule`;
+            }
+            return (PORTED_TOPICS.find(([pattern]) => pattern.test(name)) || [null, name])[1];
+        });
         return [...new Set(topics)];
     }
 

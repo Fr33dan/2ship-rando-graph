@@ -33,7 +33,8 @@ version" box in the sidebar switches to any recorded version by hand.
 Most commits do not change the logic, so many builds point at the same version, and versions share the parts that
 did not change between them (one file per region source file, one for the check table, one for the rest).
 
-Each version carries its own conditions, check and item tables, and the starting items its settings grant. The rest
+Each version carries its own conditions, check and item tables, the starting items its settings grant, and its
+song table (which ocarina buttons each song needs, and whether playing one needs the Ocarina itself). The rest
 of an older version is read with today's `primitives.js` and `solver.js`. When the game code those mirror was
 different in a version, the page lists what differed, since results for that version may be slightly off.
 
@@ -79,12 +80,14 @@ the strongest test of the port.
 
 - **Unknown name.** `extract.mjs` exits non-zero and lists the conditions when the logic uses something
   `primitives.js` does not know. Add it there.
-- **Mirrored code changed.** `GiveItem.cpp`, `ConvertItem.cpp`, `TimeLogic.cpp`, `GlitchlessLogic.cpp` and helpers
-  such as `canPlaySong` or `CanAccessDungeon` are mirrored by hand in `primitives.js` / `solver.js`. `ported.json`
-  holds the state they were last checked against. When the game's copy changes, compare, update the mirror if needed,
-  then run `node extract.mjs --source <game> --accept` and commit `ported.json`.
-- **Starting items changed shape.** They are read from `StartingItems.cpp` by a small parser in `extract.mjs`, which
-  stops with an error on a statement it cannot read rather than dropping a rule.
+- **Mirrored code changed.** `GiveItem.cpp`, `ConvertItem.cpp`, `TimeLogic.cpp`, `GlitchlessLogic.cpp`, helpers such
+  as `CanAccessDungeon`, and the game macros `primitives.js` handles itself (listed as `#define NAME`) are mirrored by
+  hand in `primitives.js` / `solver.js`. `ported.json` holds the state they were last checked against. When the
+  game's copy changes, compare, update the mirror if needed, then run `node extract.mjs --source <game> --accept` and
+  commit `ported.json`.
+- **Starting items or the song table changed shape.** They are read from `StartingItems.cpp` and `canPlaySong()` by
+  small parsers in `extract.mjs`. Starting items stop with an error on a statement the parser cannot read; an
+  unreadable `canPlaySong()` falls back to the hand-written table and shows up as mirrored code that changed.
 
 ## Files
 
